@@ -1,17 +1,19 @@
+import os
 from typing import Annotated
-
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
 
 from app.crud.user import fake_users_db
-from app.schemas.user import User, UserInDB
-from app.models.auth import *
+from app.schemas.user import User, UserCreate
+from app.controllers.auth import *
 from app.schemas.token import Token, TokenData
 
 from datetime import datetime, timedelta, timezone
+from dotenv import load_dotenv
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+load_dotenv()
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 
 app = FastAPI()
 

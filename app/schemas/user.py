@@ -7,6 +7,8 @@ class User(BaseModel):
     full_name: str | None = None
     disabled: bool | None = None
 
-
-class UserInDB(User):
+    class Config:
+        orm_mode = True  # Belangrijk voor SQLAlchemy conversie
+        
+class UserCreate(User):
     hashed_password: str

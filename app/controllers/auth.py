@@ -1,30 +1,39 @@
-
+import os
 
 from typing import Annotated
-
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
 import jwt
 from jwt.exceptions import InvalidTokenError
-from passlib.context import CryptContext
+import bcrypt
 from datetime import datetime, timedelta, timezone
 
 from app.crud.user import fake_users_db
-from app.schemas.user import User, UserInDB
+from app.schemas.user import User, UserCreate
 from app.schemas.token import Token, TokenData
+from app.controllers.user import get_user_by_username as get_user
+from dotenv import load_dotenv
+from sqlalchemy.orm import Session
 
-SECRET_KEY = "2650b5d4548e36dde43ab824d982d0646e4ab15be102dc11e355ebcac6442fc8"
-ALGORITHM = "HS256"
+# load_dotenv()
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-def get_user(db, username: str):
-    if username in db:
-        user_dict = db[username]
-        return UserInDB(**user_dict)
+# def get_user(db, username: str):
+#     if username in db:
+#         user_dict = db[username]
+#         return UserCreate(**user_dict)
 
+def get_user(db: Session, username: str):
+    user =  db.query(user_model.User).filter(user_model.User.username == username).first()
+    if user:
+        return UserCreate(user.dict())
+    else:
+        return None
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     credentials_exception = HTTPException(
@@ -53,22 +62,19 @@ async def get_current_active_user(
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
-# def fake_hash_password(password: str):
-#     return "fakehashed" + password
-
-# def fake_decode_token(token):
-#     # This doesn't provide any security at all
-#     # Check the next version
-#     user = get_user(fake_users_db, token)
-#     return user
 
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
+    return bcrypt.checkpw(
+        bytes(plain_password, encoding="utf-8"),
+        bytes(hashed_password, encoding="utf-8"),
+    )
 
 def get_password_hash(password):
-    return pwd_context.hash(password)
-
+    return bcrypt.hashpw(
+        bytes(password, encoding="utf-8"),
+        bcrypt.gensalt(),
+    )
+    
 def authenticate_user(fake_db, username: str, password: str):
     user = get_user(fake_db, username)
     if not user:
