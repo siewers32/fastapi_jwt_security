@@ -1,14 +1,31 @@
 from sqlmodel import Field, Session, SQLModel, create_engine, select
-from app.database.conf import Base
+from sqlalchemy import Column, Integer, String, Boolean
+# from app.database.conf import Base
+from pwdlib import PasswordHash, exceptions
 
-class User(SQLModel, table=True):
-    __tablename__ = "users"
+password_hash = PasswordHash.recommended()
+
+
+class UserBase(SQLModel):
+    username: str = Field(sa_column=Column(String(50), unique=True, index=True))
+    email: str | None = Field(sa_column=Column(String(50), unique=True, index=True))   
+
+class User(UserBase, table=True):
+    # __tablename__ = "users"
     id: int | None = Field(default=None, primary_key=True)
-    username: str = Field(index=True)
-    email: str | None = Field(default=None, index=True)
-    hashed_password: str 
+    hashed_password: str = Field(sa_column=Column(String(50), unique=True, index=True))  
     disabled: bool = Field(default=0)
+    
+    def set_password(self, password):
+        self.hashed_password = password_hash.hash(password)
 
+    def check_password(self, password):
+        # print(f"hashed password: {self.hashed_password}")
+        # print(f"password: {password}")
+        return password_hash.verify(password, self.hashed_password)
+    
+    def set_email(self, email):
+        self.email = email
 
     # id = Column(Integer, primary_key=True, index=True)
     # username = Column(String(50), unique=True, index=True)

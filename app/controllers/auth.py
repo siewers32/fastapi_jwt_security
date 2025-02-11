@@ -6,7 +6,6 @@ from fastapi.security import OAuth2PasswordBearer
 
 import jwt
 from jwt.exceptions import InvalidTokenError
-import bcrypt
 from datetime import datetime, timedelta, timezone
 
 from app.crud.user import fake_users_db
@@ -16,9 +15,10 @@ from app.controllers.user import get_user_by_username as get_user
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
 
+
 # load_dotenv()
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM")
+# SECRET_KEY = os.getenv("SECRET_KEY")
+# ALGORITHM = os.getenv("ALGORITHM")
 
 # pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -29,6 +29,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 #         return UserCreate(**user_dict)
 
 def get_user(db: Session, username: str):
+    print(db)
     user =  db.query(user_model.User).filter(user_model.User.username == username).first()
     if user:
         return UserCreate(user.dict())
@@ -63,23 +64,23 @@ async def get_current_active_user(
     return current_user
 
 
-def verify_password(plain_password, hashed_password):
-    return bcrypt.checkpw(
-        bytes(plain_password, encoding="utf-8"),
-        bytes(hashed_password, encoding="utf-8"),
-    )
+# def verify_password(plain_password, hashed_password):
+#     return bcrypt.checkpw(
+#         bytes(plain_password, encoding="utf-8"),
+#         bytes(hashed_password, encoding="utf-8"),
+#     )
 
-def get_password_hash(password):
-    return bcrypt.hashpw(
-        bytes(password, encoding="utf-8"),
-        bcrypt.gensalt(),
-    )
+# def get_password_hash(password):
+#     return bcrypt.hashpw(
+#         bytes(password, encoding="utf-8"),
+#         bcrypt.gensalt(),
+#     )
     
-def authenticate_user(fake_db, username: str, password: str):
-    user = get_user(fake_db, username)
+def authenticate_user(db: Session, username: str, password: str):
+    user = get_user(db, username)
     if not user:
         return False
-    if not verify_password(password, user.hashed_password):
+    if not user.check_password(password, user.hashed_password):
         return False
     return user
 

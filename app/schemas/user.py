@@ -12,3 +12,4 @@ class User(BaseModel):
         
 class UserCreate(User):
     hashed_password: str
+    

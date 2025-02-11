@@ -16,6 +16,13 @@ def get_user_by_username(db: Session, username: str):
     else:
         return None
 
+# def get_user_by_username_and_password(db: Session, username: str, password: str):
+#     user =  db.query(user_model.User).filter(user_model.User.username == username).first()
+#     if user and user_model.verify_password(password, user.hashed_password):
+#         return user
+#     else:
+#         return None
+    
 def get_users(db: Session, skip: int = 0, limit: int = 100):
     return db.query(user_model.User).offset(skip).limit(limit).all()
 
