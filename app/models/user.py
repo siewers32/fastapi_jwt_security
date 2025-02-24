@@ -9,9 +9,10 @@ password_hash = PasswordHash.recommended()
 class UserBase(SQLModel):
     username: str = Field(sa_column=Column(String(50), unique=True, index=True))
     email: str | None = Field(sa_column=Column(String(50), unique=True, index=True))   
+    # password: str | None = Field(sa_column=Column(String(50), unique=True, index=True))   
 
 class User(UserBase, table=True):
-    # __tablename__ = "users"
+    __tablename__ = "users"
     id: int | None = Field(default=None, primary_key=True)
     hashed_password: str = Field(sa_column=Column(String(50), unique=True, index=True))  
     disabled: bool = Field(default=0)
@@ -26,6 +27,15 @@ class User(UserBase, table=True):
     
     def set_email(self, email):
         self.email = email
+
+class UserPublic(UserBase):
+    id: int
+    
+class UserUpdate(UserBase):
+    name: str | None = None
+    age: int | None = None
+    hashed_password: str | None = None
+    
 
     # id = Column(Integer, primary_key=True, index=True)
     # username = Column(String(50), unique=True, index=True)
